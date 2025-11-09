@@ -1,15 +1,36 @@
 // ==UserScript==
-// @name         Complete Turnout Automation with Hide
+// @name         Complete Turnout Automation with Australian Voice Override
 // @namespace    http://tampermonkey.net/
 // @version      1.0
-// @description  Full automation: Navigate to Turnout, select Emergency, filter, hide filter panel, hide menu
+// @description  Full automation: Navigate to Turnout, select Emergency, filter, hide filter panel, hide menu + Australian voice override
 // @author       You
 // @match        https://sas.em.vic.gov.au/*
 // @grant        none
+// @run-at       document-start
 // ==/UserScript==
 
 (function() {
     'use strict';
+
+    // =====================================================
+    // AUSTRALIAN VOICE OVERRIDE
+    // =====================================================
+    const originalSpeak = speechSynthesis.speak;
+    speechSynthesis.speak = function(utterance) {
+        const voices = speechSynthesis.getVoices();
+        // Use Natural Australian voice
+        const natashaVoice = voices.find(v =>
+            v.name === "Microsoft WilliamMultilingual Online (Natural) - English (Australia)"
+        );
+        if (natashaVoice) {
+            utterance.voice = natashaVoice;
+        }
+        return originalSpeak.call(this, utterance);
+    };
+
+    // =====================================================
+    // TURNOUT AUTOMATION
+    // =====================================================
 
     let processState = {
         emergencyProcessed: false,

@@ -1,0 +1,61 @@
+// ==UserScript==
+// @name         Auto Navigate to Turnout
+// @namespace    http://tampermonkey.net/
+// @version      1.0
+// @description  Automatically clicks Turnout if not on the Turnout page
+// @author       You
+// @match        https://sas.em.vic.gov.au/*
+// @grant        none
+// ==/UserScript==
+
+(function() {
+    'use strict';
+
+    function navigateToTurnout() {
+        // Check if we're already on the turnout page by URL
+        if (window.location.hash.includes('/turnout/events')) {
+            console.log('Already on Turnout page');
+            return;
+        }
+
+        // Find the Turnout navigation item
+        const turnoutLink = document.querySelector('a[href="#/turnout/events"]');
+
+        if (!turnoutLink) {
+            console.log('Turnout link not found');
+            return;
+        }
+
+        // Check if Turnout is already active (has the active class)
+        const isActive = turnoutLink.classList.contains('Navigation_activeNav__1tYtr');
+
+        if (isActive) {
+            console.log('Turnout is already active');
+            return;
+        }
+
+        // Click the Turnout link
+        console.log('Clicking Turnout navigation item...');
+        turnoutLink.click();
+    }
+
+    // Wait for page to load
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', function() {
+            setTimeout(navigateToTurnout, 500); // Small delay to ensure navigation is rendered
+        });
+    } else {
+        setTimeout(navigateToTurnout, 500);
+    }
+
+    // Also watch for navigation changes (in case it's a single-page app)
+    let lastUrl = location.href;
+    new MutationObserver(() => {
+        const url = location.href;
+        if (url !== lastUrl) {
+            lastUrl = url;
+            setTimeout(navigateToTurnout, 1000); // Delay after navigation change
+        }
+    }).observe(document, { subtree: true, childList: true });
+
+})();

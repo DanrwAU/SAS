@@ -1,8 +1,8 @@
 // ==UserScript==
-// @name         Australian Voice Override - Natasha Natural
+// @name         Australian Voice Override
 // @namespace    http://tampermonkey.net/
 // @version      1.0
-// @description  Use Natasha Natural Australian voice
+// @description  Use Natural Australian voice
 // @author       You
 // @match        https://*
 // @match        http://*
@@ -18,15 +18,14 @@
         const voices = speechSynthesis.getVoices();
 
         // Use  Natural Australian voice
-        const natashaVoice = voices.find(v =>
+        const selectedVoice = voices.find(v =>
             v.name === "Microsoft WilliamMultilingual Online (Natural) - English (Australia)"
         );
 
-        if (natashaVoice) {
-            utterance.voice = natashaVoice;
+        if (selectedVoice) {
+            utterance.voice = selectedVoice;
         }
 
         return originalSpeak.call(this, utterance);
     };
-})();
 })();

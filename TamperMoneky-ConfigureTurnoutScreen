@@ -1,0 +1,206 @@
+// ==UserScript==
+// @name         Complete Turnout Automation with Hide
+// @namespace    http://tampermonkey.net/
+// @version      1.0
+// @description  Full automation: Navigate to Turnout, select Emergency, filter, hide filter panel, hide menu
+// @author       You
+// @match        https://sas.em.vic.gov.au/*
+// @grant        none
+// ==/UserScript==
+
+(function() {
+    'use strict';
+
+    let processState = {
+        emergencyProcessed: false,
+        filterHidden: false,
+        menuHidden: false
+    };
+
+    function navigateToTurnout() {
+        if (window.location.hash.includes('/turnout/events')) {
+            return true; // Already on turnout page
+        }
+
+        const turnoutLink = document.querySelector('a[href="#/turnout/events"]');
+        if (turnoutLink && !turnoutLink.classList.contains('Navigation_activeNav__1tYtr')) {
+            console.log('Navigating to Turnout page...');
+            turnoutLink.click();
+            return false; // Navigation initiated
+        }
+
+        return true; // No navigation needed
+    }
+
+    function handleEmergencyFilter() {
+        if (!window.location.hash.includes('/turnout/events') || processState.emergencyProcessed) {
+            return true;
+        }
+
+        const emergencyCheckbox = document.querySelector('input[name="Emergency"]');
+        const filterButton = document.querySelector('button[aria-label="Filter"]');
+
+        if (!emergencyCheckbox || !filterButton) {
+            return false; // Elements not ready
+        }
+
+        if (!emergencyCheckbox.checked) {
+            console.log('Selecting Emergency checkbox...');
+
+            const emergencyLabel = document.querySelector('label[aria-label="Emergency"]');
+            if (emergencyLabel) {
+                emergencyLabel.click();
+            } else {
+                emergencyCheckbox.click();
+            }
+
+            // Wait a moment then click Filter
+            setTimeout(() => {
+                console.log('Clicking Filter button...');
+                filterButton.click();
+                processState.emergencyProcessed = true;
+
+                // Continue to next step after filter completes
+                setTimeout(() => {
+                    hideFilterPanel();
+                }, 1500); // Wait for filter to process
+
+            }, 300);
+        } else {
+            console.log('Emergency already selected');
+            processState.emergencyProcessed = true;
+            // Continue to next step
+            setTimeout(() => {
+                hideFilterPanel();
+            }, 500);
+        }
+
+        return true;
+    }
+
+    function hideFilterPanel() {
+        if (processState.filterHidden) {
+            return;
+        }
+
+        console.log('Attempting to hide filter panel...');
+
+        // Multiple possible selectors for the "Filter Events" toggle button
+        const filterToggleSelectors = [
+            'button[aria-label="Filter"]', // Same button might toggle
+            'button[aria-label="Filter Events"]',
+            'button:contains("Filter Events")',
+            '.TurnoutView_filterControls__38w7y button', // Any button in filter controls
+            'button[aria-label="Hide Filter"]',
+            'button[aria-label="Close Filter"]'
+        ];
+
+        let filterToggleButton = null;
+        for (const selector of filterToggleSelectors) {
+            filterToggleButton = document.querySelector(selector);
+            if (filterToggleButton) {
+                console.log(`Found filter toggle button with selector: ${selector}`);
+                break;
+            }
+        }
+
+        if (filterToggleButton) {
+            console.log('Clicking to hide filter panel...');
+            filterToggleButton.click();
+            processState.filterHidden = true;
+
+            // Continue to hide menu after filter panel is hidden
+            setTimeout(() => {
+                hideMenu();
+            }, 800);
+        } else {
+            console.log('Filter toggle button not found, proceeding to hide menu...');
+            processState.filterHidden = true;
+            setTimeout(() => {
+                hideMenu();
+            }, 500);
+        }
+    }
+
+    function hideMenu() {
+        if (processState.menuHidden) {
+            return;
+        }
+
+        console.log('Attempting to hide menu...');
+
+        // Multiple selectors for the Hide Menu button
+        const hideMenuSelectors = [
+            'button[aria-label="Hide Menu"]',
+            'button.TurnoutView_hideMenu__3SBT4',
+            'button.btn_tertiary.TurnoutView_hideMenu__3SBT4',
+            '.TurnoutView_iconHideNav__1FKbL'
+        ];
+
+        let hideMenuButton = null;
+        for (const selector of hideMenuSelectors) {
+            hideMenuButton = document.querySelector(selector);
+            if (hideMenuButton) {
+                console.log(`Found hide menu button with selector: ${selector}`);
+                break;
+            }
+        }
+
+        if (hideMenuButton) {
+            console.log('Clicking Hide Menu button...');
+            hideMenuButton.click();
+            processState.menuHidden = true;
+            console.log('Automation sequence complete!');
+        } else {
+            console.log('Hide Menu button not found');
+        }
+    }
+
+    function processPage() {
+        // Reset state when starting process
+        if (!window.location.hash.includes('/turnout/events')) {
+            resetState();
+        }
+
+        // Step 1: Navigate to turnout page
+        if (navigateToTurnout()) {
+            // Step 2: Handle emergency filter
+            if (!handleEmergencyFilter()) {
+                // Retry if elements weren't ready
+                setTimeout(processPage, 1000);
+            }
+        } else {
+            // Wait for navigation to complete
+            setTimeout(processPage, 2000);
+        }
+    }
+
+    function resetState() {
+        processState = {
+            emergencyProcessed: false,
+            filterHidden: false,
+            menuHidden: false
+        };
+    }
+
+    // Watch for URL changes
+    let lastUrl = location.href;
+    new MutationObserver(() => {
+        const url = location.href;
+        if (url !== lastUrl) {
+            lastUrl = url;
+            resetState();
+            setTimeout(processPage, 1000);
+        }
+    }).observe(document, { subtree: true, childList: true });
+
+    // Initial run
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', () => {
+            setTimeout(processPage, 1500);
+        });
+    } else {
+        setTimeout(processPage, 1500);
+    }
+
+})();

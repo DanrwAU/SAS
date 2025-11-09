@@ -1,8 +1,8 @@
 // ==UserScript==
-// @name         Fast Australian Voice Override
+// @name         Australian Voice Override - Natasha Natural
 // @namespace    http://tampermonkey.net/
 // @version      1.0
-// @description  Fast Australian speech synthesis voice override
+// @description  Use Natasha Natural Australian voice
 // @author       You
 // @match        https://*
 // @match        http://*
@@ -13,70 +13,20 @@
 (function() {
     'use strict';
 
-    let cachedAustralianVoice = null;
-    let voicesLoaded = false;
-
-    console.log('🇦🇺 Fast Australian voice override loading...');
-
-    function cacheAustralianVoice() {
-        const voices = speechSynthesis.getVoices();
-
-        if (voices.length === 0) return false;
-
-        // Find Australian voice (prioritize online/neural voices)
-        cachedAustralianVoice = voices.find(voice => {
-            const name = voice.name.toLowerCase();
-            const lang = voice.lang.toLowerCase();
-
-            return (
-                (lang.includes('en-au') || name.includes('australia')) &&
-                (name.includes('natural') || name.includes('neural') || !voice.localService)
-            );
-        }) || voices.find(voice => {
-            const name = voice.name.toLowerCase();
-            const lang = voice.lang.toLowerCase();
-            return lang.includes('en-au') || name.includes('australia');
-        });
-
-        if (cachedAustralianVoice) {
-            console.log('✅ Cached Australian voice:', cachedAustralianVoice.name);
-            voicesLoaded = true;
-            return true;
-        } else {
-            console.log('❌ No Australian voice found');
-            return false;
-        }
-    }
-
-    // Override speech synthesis immediately
     const originalSpeak = speechSynthesis.speak;
     speechSynthesis.speak = function(utterance) {
-        // Use cached voice if available
-        if (cachedAustralianVoice) {
-            utterance.voice = cachedAustralianVoice;
+        const voices = speechSynthesis.getVoices();
+
+        // Use  Natural Australian voice
+        const natashaVoice = voices.find(v =>
+            v.name === "Microsoft WilliamMultilingual Online (Natural) - English (Australia)"
+        );
+
+        if (natashaVoice) {
+            utterance.voice = natashaVoice;
         }
 
         return originalSpeak.call(this, utterance);
     };
-
-    // Try to cache voice immediately
-    if (cacheAustralianVoice()) {
-        console.log('🇦🇺 Australian voice ready');
-    } else {
-        // If voices not loaded yet, wait for them (but don't delay speech)
-        speechSynthesis.onvoiceschanged = function() {
-            if (!voicesLoaded) {
-                cacheAustralianVoice();
-            }
-        };
-
-        // Fallback: try again after short delay
-        setTimeout(() => {
-            if (!voicesLoaded) {
-                cacheAustralianVoice();
-            }
-        }, 1000);
-    }
-
-    console.log('🇦🇺 Fast override active');
+})();
 })();

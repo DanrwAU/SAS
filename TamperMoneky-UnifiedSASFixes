@@ -15,15 +15,30 @@
     // =====================================================
     // AUSTRALIAN VOICE OVERRIDE
     // =====================================================
-    const originalSpeak = speechSynthesis.speak;
-    speechSynthesis.speak = function(utterance) {
+    let cachedAustralianVoice = null;
+    
+    function findAustralianVoice() {
         const voices = speechSynthesis.getVoices();
-        // Use Natural Australian voice
-        const natashaVoice = voices.find(v =>
+        cachedAustralianVoice = voices.find(v =>
             v.name === "Microsoft WilliamMultilingual Online (Natural) - English (Australia)"
         );
-        if (natashaVoice) {
-            utterance.voice = natashaVoice;
+        if (cachedAustralianVoice) {
+            console.log('Australian voice found and cached:', cachedAustralianVoice.name);
+        }
+    }
+    
+    // Try to find voice immediately
+    findAustralianVoice();
+    
+    // If voices aren't loaded yet, wait for them
+    if (!cachedAustralianVoice) {
+        speechSynthesis.addEventListener('voiceschanged', findAustralianVoice, { once: true });
+    }
+    
+    const originalSpeak = speechSynthesis.speak;
+    speechSynthesis.speak = function(utterance) {
+        if (cachedAustralianVoice) {
+            utterance.voice = cachedAustralianVoice;
         }
         return originalSpeak.call(this, utterance);
     };

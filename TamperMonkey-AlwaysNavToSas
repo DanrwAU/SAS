@@ -1,0 +1,22 @@
+// ==UserScript==
+// @name         Always Redirect to Preferred Site
+// @namespace    http://tampermonkey.net/
+// @version      1.0
+// @description  Always redirect to preferred site unless already there
+// @match        *://*/*
+// @exclude      https://sas.em.vic.gov.au/*
+// @exclude      https://bartapp.net/*
+// @run-at       document-start
+// @grant        none
+// ==/UserScript==
+
+(function() {
+    'use strict';
+
+    // Your preferred homepage
+    const preferredSite = 'https://sas.em.vic.gov.au/#/turnout/events';
+
+    // Simple redirect - only runs if not already on preferred site
+    // (due to @exclude directive above)
+    window.location.replace(preferredSite);
+})();

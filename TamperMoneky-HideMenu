@@ -1,0 +1,22 @@
+// ==UserScript==
+// @name         Simple Hide Menu Clicker
+// @namespace    http://tampermonkey.net/
+// @version      1.0
+// @description  Simple auto-clicker for Hide Menu button
+// @author       You
+// @match        https://sas.em.vic.gov.au/*
+// @grant        none
+// ==/UserScript==
+
+(function() {
+    'use strict';
+
+    // Wait a bit for page to load, then try to click
+    setTimeout(() => {
+        const button = document.querySelector('button[aria-label="Hide Menu"]');
+        if (button) {
+            button.click();
+            console.log('Hide Menu button clicked');
+        }
+    }, 1000); // Wait 1 second
+})();
